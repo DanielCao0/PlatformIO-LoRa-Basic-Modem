@@ -1,29 +1,52 @@
 #include <Arduino.h>
+#include "periodical_uplink.h"
+
+// FreeRTOS task handle
+TaskHandle_t loraTaskHandle = NULL;
+
+// LoRaWAN task function
+void loraWANTask(void *parameter) {
+    Serial.println("LoRaWAN Task Started...");
+    
+    // Call LoRaWAN main function
+    main_periodical_uplink();
+    
+    // Delete task if function returns
+    Serial.println("LoRaWAN Task Finished.");
+    vTaskDelete(NULL);
+}
 
 void setup() {
-    // 初始化串口，波特率115200
+    // Initialize serial port with 115200 baud rate
     Serial.begin(115200);
     
-    // 等待串口连接（可选）
+    // Wait for serial connection (optional)
     while (!Serial) {
         delay(10);
     }
     
-    Serial.println("RAK3112 Loop Print Started...");
+    Serial.println("RAK3112 LoRaWAN Started...");
+
+    // Configure LED pins
+    pinMode(PIN_LED1, OUTPUT);
+    pinMode(PIN_LED2, OUTPUT);
+    digitalWrite(PIN_LED1, HIGH);
+    digitalWrite(PIN_LED2, HIGH);
+
+    //Create LoRaWAN task on CPU 1 to avoid watchdog issues
+    xTaskCreatePinnedToCore(
+        loraWANTask,          // Task function
+        "LoRaWAN Task",       // Task name
+        64 * 1024,            // Stack size
+        NULL,                 // Task parameters
+        1,                    // Task priority (same as loop task)
+        &loraTaskHandle,      // Task handle
+        1                     // CPU core (1 = CPU 1, 0 = CPU 0)
+    );
+    
+    Serial.println("LoRaWAN Task Created");
 }
 
-void loop() {
-    static unsigned long counter = 0;
-    
-    // 打印计数器和时间戳
-    Serial.print("Loop Count: ");
-    Serial.print(counter);
-    Serial.print(" | Runtime: ");
-    Serial.print(millis());
-    Serial.println(" ms");
-    
-    counter++;
-    
-    // 延时1秒
-    delay(1000);
+void loop() { 
+    delay(100);
 }
