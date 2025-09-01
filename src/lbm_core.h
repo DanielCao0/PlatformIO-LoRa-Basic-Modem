@@ -1,7 +1,7 @@
 /*!
- * \file      periodical_uplink.h
+ * \file      lbm_core.h
  *
- * \brief     Periodical uplink header file
+ * \brief     LoRaWAN Basic Modem core header file
  *
  * The Clear BSD License
  * Copyright Semtech Corporation 2021. All rights reserved.
@@ -32,8 +32,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PERIODICAL_UPLINK_H
-#define PERIODICAL_UPLINK_H
+#ifndef LBM_CORE_H
+#define LBM_CORE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,6 +46,15 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "smtc_modem_api.h"
+
+/*
+ * -----------------------------------------------------------------------------
+ * --- PUBLIC TYPES ------------------------------------------------------------
+ */
+
+// User event callback function type
+typedef void (*LBMEventCallback)(smtc_modem_event_t* event);
 
 /*
  * -----------------------------------------------------------------------------
@@ -94,13 +103,13 @@ extern "C" {
  * It handles modem events, manages sleep modes, and performs periodic data transmission.
  */
 void main_periodical_uplink(void);
-
+void lbm_init(void);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PERIODICAL_UPLINK_H */
+#endif /* LBM_CORE_H */
 
 /* --- EOF ------------------------------------------------------------------ */

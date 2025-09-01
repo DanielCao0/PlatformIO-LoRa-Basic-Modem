@@ -40,7 +40,7 @@
 #include <stdbool.h>  // bool type
 
 #include "main.h"
-#include "periodical_uplink.h"
+#include "lbm_core.h"
 
 #include "smtc_modem_test_api.h"
 #include "smtc_modem_api.h"
@@ -245,6 +245,27 @@ void main_periodical_uplink( void )
     }
 }
 
+
+void lbm_init(void)
+{
+     // Disable IRQ to avoid unwanted behavior during init
+    hal_mcu_disable_irq( );
+
+    // Configure all the µC periph (clock, gpio, timer, ...)
+    hal_mcu_init( );
+
+    // Init the modem and use modem_event_callback as event callback (keep original)
+    smtc_modem_init( &modem_event_callback );
+
+    // Init done: enable interruption
+    hal_mcu_enable_irq( );
+
+    hal_mcu_set_sleep_for_ms(100);
+}
+
+
+
+
 /*
  * -----------------------------------------------------------------------------
  * --- PRIVATE FUNCTIONS DEFINITION --------------------------------------------
@@ -252,6 +273,8 @@ void main_periodical_uplink( void )
 
 static void modem_event_callback( void )
 {
+    extern LBMEventCallback userEventCallback;
+    
     SMTC_HAL_TRACE_MSG_COLOR( "Modem event callback\n", HAL_DBG_TRACE_COLOR_BLUE );
 
     smtc_modem_event_t current_event;
@@ -264,6 +287,12 @@ static void modem_event_callback( void )
         // Read modem event
         ASSERT_SMTC_MODEM_RC( smtc_modem_get_event( &current_event, &event_pending_count ) );
 
+        // Call user callback first if registered
+        if (userEventCallback != nullptr) {
+            userEventCallback(&current_event);
+        }
+
+        // Then continue with original internal processing
         switch( current_event.event_type )
         {
         case SMTC_MODEM_EVENT_RESET:
@@ -271,10 +300,10 @@ static void modem_event_callback( void )
 
 #if !defined( USE_LR11XX_CREDENTIALS )
             // Set user credentials
-            ASSERT_SMTC_MODEM_RC( smtc_modem_set_deveui( stack_id, user_dev_eui ) );
-            ASSERT_SMTC_MODEM_RC( smtc_modem_set_joineui( stack_id, user_join_eui ) );
-            ASSERT_SMTC_MODEM_RC( smtc_modem_set_appkey( stack_id, user_gen_app_key ) );
-            ASSERT_SMTC_MODEM_RC( smtc_modem_set_nwkkey( stack_id, user_app_key ) );
+            // ASSERT_SMTC_MODEM_RC( smtc_modem_set_deveui( stack_id, user_dev_eui ) );
+            // ASSERT_SMTC_MODEM_RC( smtc_modem_set_joineui( stack_id, user_join_eui ) );
+            // ASSERT_SMTC_MODEM_RC( smtc_modem_set_appkey( stack_id, user_gen_app_key ) );
+            // ASSERT_SMTC_MODEM_RC( smtc_modem_set_nwkkey( stack_id, user_app_key ) );
 #else
             // Get internal credentials
             ASSERT_SMTC_MODEM_RC( smtc_modem_get_chip_eui( stack_id, chip_eui ) );
@@ -283,7 +312,7 @@ static void modem_event_callback( void )
             SMTC_HAL_TRACE_ARRAY( "CHIP_PIN", chip_pin, SMTC_MODEM_PIN_LENGTH );
 #endif
             // Set user region
-            ASSERT_SMTC_MODEM_RC( smtc_modem_set_region( stack_id, MODEM_EXAMPLE_REGION ) );
+            // ASSERT_SMTC_MODEM_RC( smtc_modem_set_region( stack_id, MODEM_EXAMPLE_REGION ) );
 // Schedule a Join LoRaWAN network
 #if defined( USE_RELAY_TX )
             // by default when relay mode is activated , CSMA is also activated by default to at least protect the WOR
@@ -317,15 +346,15 @@ static void modem_event_callback( void )
 #endif
             
 
-            ASSERT_SMTC_MODEM_RC( smtc_modem_join_network( stack_id ) );
+            // ASSERT_SMTC_MODEM_RC( smtc_modem_join_network( stack_id ) );
             break;
 
         case SMTC_MODEM_EVENT_ALARM:
             SMTC_HAL_TRACE_INFO( "Event received: ALARM\n" );
             // Send periodical uplink on port 101
-            send_uplink_counter_on_port( 101 );
-            // Restart periodical uplink alarm
-            ASSERT_SMTC_MODEM_RC( smtc_modem_alarm_start_timer( PERIODICAL_UPLINK_DELAY_S ) );
+            // send_uplink_counter_on_port( 101 );
+            // // Restart periodical uplink alarm
+            // ASSERT_SMTC_MODEM_RC( smtc_modem_alarm_start_timer( PERIODICAL_UPLINK_DELAY_S ) );
             break;
 
         case SMTC_MODEM_EVENT_JOINED:
@@ -333,9 +362,9 @@ static void modem_event_callback( void )
             SMTC_HAL_TRACE_INFO( "Modem is now joined \n" );
 
             // Send first periodical uplink on port 101
-            send_uplink_counter_on_port( 101 );
-            // start periodical uplink alarm
-            ASSERT_SMTC_MODEM_RC( smtc_modem_alarm_start_timer( DELAY_FIRST_MSG_AFTER_JOIN ) );
+            // send_uplink_counter_on_port( 101 );
+            // // start periodical uplink alarm
+            // ASSERT_SMTC_MODEM_RC( smtc_modem_alarm_start_timer( DELAY_FIRST_MSG_AFTER_JOIN ) );
             break;
 
         case SMTC_MODEM_EVENT_TXDONE:

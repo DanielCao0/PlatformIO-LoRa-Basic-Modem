@@ -73,16 +73,6 @@ extern "C" {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 \
     }
 
-/**
- * @brief Modem Region define
- */
-#ifndef MODEM_EXAMPLE_REGION
-#if !defined( SX128X )
-#define MODEM_EXAMPLE_REGION SMTC_MODEM_REGION_EU_868
-#else
-#define MODEM_EXAMPLE_REGION SMTC_MODEM_REGION_WW2G4
-#endif
-#endif  // MODEM_EXAMPLE_REGION
 
 #ifdef __cplusplus
 }
