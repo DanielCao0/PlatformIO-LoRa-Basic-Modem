@@ -86,7 +86,7 @@ void sendPeriodicData() {
     
     // Send data on port 2
     if (lbm.lorawan.send(payload, sizeof(payload), 2, false)) {
-        Serial.printf("Sent packet #%d: Hi! %d\n", packetCounter, packetCounter);
+        Serial.printf("Sent packet #%d: RAK %d\n", packetCounter, packetCounter);
         packetCounter++;
     } else {
         Serial.println("Failed to send packet");
